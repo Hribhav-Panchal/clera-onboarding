@@ -1,0 +1,26 @@
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px 2px 7px;
+  border-radius: var(--radius-pill);
+  font: 500 11px/16px var(--font-sans);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.resume {
+  background: var(--sage-50);
+  color: var(--sage-700);
+}
+
+.chat {
+  background: var(--amber-100);
+  color: var(--amber-600);
+}
+
+.you {
+  background: var(--muted-100);
+  color: var(--muted-600);
+}

@@ -70,3 +70,50 @@ export function parsePay(raw: string): number | null {
 }
 
 export const MAX_CHAT_LENGTH = 2000
+
+/* ------------------------------------------------------- Extra documents */
+
+export const MAX_DOCUMENTS = 10
+
+const DOC_TYPES: Record<string, string[]> = {
+  pdf: ['application/pdf'],
+  doc: ['application/msword'],
+  docx: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  txt: ['text/plain'],
+  md: ['text/markdown', 'text/x-markdown', 'text/plain'],
+  png: ['image/png'],
+  jpg: ['image/jpeg'],
+  jpeg: ['image/jpeg'],
+}
+
+export const DOCUMENT_ACCEPT = Object.keys(DOC_TYPES)
+  .map((e) => `.${e}`)
+  .join(',')
+
+export function checkDocumentFile(file: File, existing: number): FileCheck {
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
+  const allowed = DOC_TYPES[ext]
+  if (!allowed || (file.type && !allowed.includes(file.type))) {
+    return { ok: false, reason: `“${file.name}” isn’t a supported type. Use PDF, Word, text or an image.` }
+  }
+  if (file.size === 0) return { ok: false, reason: `“${file.name}” is empty.` }
+  if (file.size > MAX_RESUME_BYTES) return { ok: false, reason: `“${file.name}” is larger than 10 MB.` }
+  if (existing >= MAX_DOCUMENTS) return { ok: false, reason: `You can keep up to ${MAX_DOCUMENTS} documents. Remove one first.` }
+  return { ok: true }
+}
+
+/** Accepts "example.com/me" and adds https://. Returns null when it can't be a public web link. */
+export function normalizeUrl(raw: string): string | null {
+  const s = raw.trim()
+  if (!s || /\s/.test(s)) return null
+  const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(s) ? s : `https://${s}`
+  try {
+    const u = new URL(withScheme)
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return null
+    if (!u.hostname.includes('.') || u.hostname.endsWith('.')) return null
+    const out = u.toString()
+    return u.pathname === '/' && !u.search && !u.hash ? out.slice(0, -1) : out
+  } catch {
+    return null
+  }
+}

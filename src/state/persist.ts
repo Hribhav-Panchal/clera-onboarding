@@ -35,7 +35,14 @@ export function parseState(raw: string | null): AppState | null {
     return {
       ...base,
       ...p,
-      profile: { ...base.profile, ...p.profile, essentials: { ...base.profile.essentials, ...p.profile.essentials } },
+      profile: {
+        ...base.profile,
+        ...p.profile,
+        essentials: { ...base.profile.essentials, ...p.profile.essentials },
+        // Older saves predate profile details and extra documents.
+        details: { ...base.profile.details, ...(isObject(p.profile.details) ? p.profile.details : {}) },
+        documents: Array.isArray(p.profile.documents) ? p.profile.documents : [],
+      },
       // Drop references to roles that no longer exist in the catalogue.
       matches: p.matches.filter((m) => roles[m.roleId]),
       applications: p.applications.filter((a) => roles[a.roleId]),

@@ -1,16 +1,15 @@
-import { useRef, useState } from 'react'
-import { errorMessage, saveEssentials } from '../api/client'
-import { useAssistantContext } from '../assistant/context'
-import { Button } from '../components/Button'
-import { Card } from '../components/Card'
-import { ChoiceGroup } from '../components/ChoiceGroup'
-import { TextField } from '../components/Field'
-import { useToast } from '../components/Toast'
-import type { Essentials, VisaNeed, WorkStyle } from '../data/types'
-import { useReveal } from '../lib/useReveal'
-import { LIMITS, parsePay, validateEssentials, type EssentialsErrors } from '../lib/validation'
-import { useAppState, useDispatch } from '../state/store'
-import styles from './SimplePage.module.css'
+import { useState } from 'react'
+import { errorMessage, saveEssentials } from '../../api/client'
+import { Button } from '../../components/Button'
+import { Card } from '../../components/Card'
+import { ChoiceGroup } from '../../components/ChoiceGroup'
+import { TextField } from '../../components/Field'
+import { useToast } from '../../components/Toast'
+import type { Essentials, VisaNeed, WorkStyle } from '../../data/types'
+import { LIMITS, parsePay, validateEssentials, type EssentialsErrors } from '../../lib/validation'
+import { useAppState, useDispatch } from '../../state/store'
+import styles from '../SimplePage.module.css'
+import p from './profile.module.css'
 
 const WORK_STYLES: { value: WorkStyle; label: string }[] = [
   { value: 'remote', label: 'Remote' },
@@ -23,8 +22,8 @@ const VISA: { value: VisaNeed; label: string }[] = [
   { value: 'unsure', label: 'Not sure' },
 ]
 
-/** Profile · matching preferences. Not in the Figma flow; built from A2's parts. */
-export function ProfilePage() {
+/** Matching preferences — the A2 fields, editable after onboarding. */
+export function PreferencesCard() {
   const { profile } = useAppState()
   const dispatch = useDispatch()
   const toast = useToast()
@@ -32,12 +31,6 @@ export function ProfilePage() {
   const [payText, setPayText] = useState(form.minBasePay ? form.minBasePay.toLocaleString('en-US') : '')
   const [errors, setErrors] = useState<EssentialsErrors>({})
   const [saving, setSaving] = useState(false)
-  const page = useRef<HTMLDivElement>(null)
-  useReveal(page)
-  useAssistantContext('profile', 'Changes here apply to new matches. Requests you already sent are not affected.', [
-    'What kind of roles will I see?',
-    'Should I set a minimum pay?',
-  ])
 
   const dirty = JSON.stringify(form) !== JSON.stringify(profile.essentials)
   const set = (patch: Partial<Essentials>) => {
@@ -69,13 +62,14 @@ export function ProfilePage() {
   }
 
   return (
-    <div ref={page} className={styles.page}>
-      <header className={styles.header} data-reveal>
-        <h1 className={styles.h1}>Profile</h1>
-        <p className={styles.sub}>Your matching preferences. Companies only see your profile when you send an introduction.</p>
-      </header>
-
-      <Card padding="lg" className={styles.form} data-reveal>
+    <section className={p.section} aria-labelledby="prefs-title" data-reveal>
+      <div className={p.sectionHead}>
+        <h2 id="prefs-title" className={p.h2}>
+          Matching preferences
+        </h2>
+        <span className={p.meta}>Used for new matches only</span>
+      </div>
+      <Card padding="lg" className={styles.form}>
         <TextField
           label="Target role"
           value={form.targetRole}
@@ -135,6 +129,6 @@ export function ProfilePage() {
           </Button>
         </div>
       </Card>
-    </div>
+    </section>
   )
 }

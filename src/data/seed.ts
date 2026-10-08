@@ -1,5 +1,5 @@
 import { PACIFIC, daysAgo, hoursAgo, nextWeekday, zonedTimeToIso } from '../lib/time'
-import type { Application, Essentials, Match, Profile, Role } from './types'
+import type { Application, DetailSource, Essentials, Match, Profile, ProfileDetails, Role } from './types'
 
 /*
  * Mock catalogue. Everything here would come from the Clera API in
@@ -272,6 +272,55 @@ export const PARSED_ESSENTIALS: Essentials = {
   visa: 'no',
 }
 
+export function emptyDetails(): ProfileDetails {
+  return { headline: '', summary: '', aboutSource: null, experience: [], education: [], skills: [], notes: [], links: [] }
+}
+
+/**
+ * What the mock parser "reads" from a resume (or pulls from a connected
+ * assistant's conversations when `source` is 'chat'). Sample content only.
+ */
+export function parsedDetails(source: DetailSource, at = new Date().toISOString()): ProfileDetails {
+  const s = { source, addedAt: at }
+  return {
+    headline: 'Product designer who turns complex workflows into simple tools',
+    summary:
+      'Six years designing B2B and developer-facing products, from early research through shipped interface. Comfortable owning a product area end to end and building the design system that supports it.',
+    aboutSource: source,
+    experience: [
+      {
+        ...s,
+        id: 'exp-1',
+        title: 'Senior Product Designer',
+        company: 'Fieldnote',
+        location: 'San Francisco',
+        start: '2022',
+        end: null,
+        highlights: [
+          'Led the redesign of the scheduling workflow used by 4,000 operations teams',
+          'Built the component library and design tokens adopted across three product squads',
+        ],
+      },
+      {
+        ...s,
+        id: 'exp-2',
+        title: 'Product Designer',
+        company: 'Ledgerline',
+        location: 'Remote',
+        start: '2019',
+        end: '2022',
+        highlights: ['Owned onboarding and billing flows from research to launch', 'Ran weekly usability sessions with finance teams'],
+      },
+    ],
+    education: [{ ...s, id: 'edu-1', school: 'UC Santa Cruz', degree: 'B.A. Cognitive Science, Human-Computer Interaction', year: '2019' }],
+    skills: ['Product strategy', 'Interaction design', 'Design systems', 'Prototyping', 'User research', 'Figma', 'React'].map(
+      (name) => ({ ...s, name }),
+    ),
+    notes: [],
+    links: [{ ...s, id: 'link-1', kind: 'portfolio', url: 'https://example.com/hribhav-portfolio' }],
+  }
+}
+
 export function newProfile(): Profile {
   return {
     firstName: 'Hribhav',
@@ -282,6 +331,8 @@ export function newProfile(): Profile {
     prefilled: {},
     onboarded: false,
     savedAt: null,
+    details: emptyDetails(),
+    documents: [],
   }
 }
 
@@ -323,6 +374,18 @@ export function sampleAccount(now = Date.now()) {
     prefilled: { targetRole: true, location: true },
     onboarded: true,
     savedAt: daysAgo(9, now),
+    details: {
+      ...parsedDetails('resume', daysAgo(9, now)),
+      notes: [
+        { id: 'note-1', source: 'chat', addedAt: daysAgo(4, now), text: 'I prefer small teams where design has a seat in product decisions' },
+        { id: 'note-2', source: 'chat', addedAt: daysAgo(2, now), text: 'I am open to relocating to New York for the right founding role' },
+      ],
+      skills: [
+        ...parsedDetails('resume', daysAgo(9, now)).skills,
+        { name: 'Design engineering', source: 'chat', addedAt: daysAgo(2, now) },
+      ],
+    },
+    documents: [],
   }
   const matches: Match[] = [
     ...FIRST_MATCH_IDS.map((roleId) => ({ roleId, status: 'new' as const, receivedAt: hoursAgo(3, now), unseen: true })),

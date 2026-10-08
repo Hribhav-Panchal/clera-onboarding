@@ -7,8 +7,20 @@ import { matchesBy, trackRows } from '../state/selectors'
  * candidate's real (mock) state so the conversation feels grounded. The
  * production assistant replaces `askClera` in src/api/client.ts.
  */
+/** "Remember that I prefer small teams" → "I prefer small teams". */
+export function rememberedFact(message: string): string | null {
+  const m = message.trim().match(/^(?:please\s+)?(?:remember|note)(?:\s+that)?[\s,:]+(.{4,})$/i)
+  if (!m) return null
+  const fact = m[1].trim().replace(/[.!]+$/, '')
+  return fact.charAt(0).toUpperCase() + fact.slice(1)
+}
+
 export function replyFor(message: string, state: AppState): string {
   const q = message.toLowerCase()
+  const fact = rememberedFact(message)
+  if (fact) {
+    return `Saved to your profile: “${fact}”. I will use it when I look for matches and draft answers. You can remove it from Profile any time.`
+  }
   const fresh = matchesBy(state, 'new')
   const rows = trackRows(state)
 

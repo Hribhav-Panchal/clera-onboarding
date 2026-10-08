@@ -4,10 +4,10 @@ import { askClera, errorMessage, isAbort } from '../api/client'
 import { gsap, prefersReducedMotion } from '../lib/motion'
 import { usePress } from '../lib/usePress'
 import { MAX_CHAT_LENGTH } from '../lib/validation'
-import { useAppState } from '../state/store'
+import { useAppState, useDispatch } from '../state/store'
 import { ASK_EVENT } from './ask'
 import { useAssistantValue } from './context'
-import { replyFor } from './replies'
+import { rememberedFact, replyFor } from './replies'
 import styles from './AssistantPanel.module.css'
 
 interface Msg {
@@ -33,6 +33,7 @@ export function AssistantPanel({
 }) {
   const ctx = useAssistantValue()
   const state = useAppState()
+  const dispatch = useDispatch()
   const stateRef = useRef(state)
   useEffect(() => {
     stateRef.current = state
@@ -111,6 +112,12 @@ export function AssistantPanel({
       try {
         const reply = await askClera(clean, (m) => replyFor(m, stateRef.current), ctrl.signal)
         append(key, { id: ++seq, from: 'clera', text: reply })
+        // "Remember that …" turns into a profile note sourced from chat.
+        const fact = rememberedFact(clean)
+        if (fact) {
+          const at = new Date().toISOString()
+          dispatch({ type: 'details/noteAdded', note: { id: `note-${Date.now().toString(36)}`, text: fact, source: 'chat', addedAt: at } })
+        }
       } catch (err) {
         if (isAbort(err)) return
         setThreads((t) => {
@@ -126,7 +133,7 @@ export function AssistantPanel({
         }
       }
     },
-    [append, ctx.key, pending],
+    [append, ctx.key, pending, dispatch],
   )
 
   // Questions handed over from buttons elsewhere ("Prepare for this role").

@@ -17,6 +17,75 @@ export interface ResumeFile {
   uploadedAt: string
 }
 
+/** Where a piece of profile information came from. */
+export type DetailSource = 'resume' | 'chat' | 'you'
+
+export interface Sourced {
+  source: DetailSource
+  addedAt: string
+}
+
+export interface Experience extends Sourced {
+  id: string
+  title: string
+  company: string
+  location: string | null
+  /** "2022" or "Mar 2022" — kept as written on the resume. */
+  start: string
+  /** null = present */
+  end: string | null
+  highlights: string[]
+}
+
+export interface Education extends Sourced {
+  id: string
+  school: string
+  degree: string
+  year: string | null
+}
+
+export interface Skill extends Sourced {
+  name: string
+}
+
+export interface ProfileNote extends Sourced {
+  id: string
+  text: string
+}
+
+export type LinkKind = 'portfolio' | 'linkedin' | 'github' | 'website' | 'other'
+
+export interface ProfileLink extends Sourced {
+  id: string
+  kind: LinkKind
+  url: string
+}
+
+export interface ProfileDetails {
+  headline: string
+  summary: string
+  /** Source of the headline + summary pair. null while empty. */
+  aboutSource: DetailSource | null
+  experience: Experience[]
+  education: Education[]
+  skills: Skill[]
+  notes: ProfileNote[]
+  links: ProfileLink[]
+}
+
+export type DocumentKind = 'portfolio' | 'cover-letter' | 'certificate' | 'writing-sample' | 'reference' | 'other'
+
+export interface ExtraDocument {
+  id: string
+  name: string
+  size: number
+  mime: string
+  kind: DocumentKind
+  addedAt: string
+  /** Off by default: only the resume goes out with an introduction unless you say so. */
+  shared: boolean
+}
+
 export interface Profile {
   firstName: string
   email: string
@@ -28,6 +97,8 @@ export interface Profile {
   onboarded: boolean
   /** ISO timestamp of the last autosave of the onboarding form. */
   savedAt: string | null
+  details: ProfileDetails
+  documents: ExtraDocument[]
 }
 
 export type LogoTone = 'sage' | 'muted' | 'clay'

@@ -151,7 +151,7 @@ export function EssentialsPage() {
             Step 2 of 2
           </p>
           <h1 className={styles.title} data-split>
-            What should your next role look like?
+            What should your next role be?
           </h1>
           <p className={styles.lede} data-reveal>
             {fromResume
