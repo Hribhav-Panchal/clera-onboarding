@@ -88,7 +88,7 @@ export function ResumePage() {
             if (pct === 100) setPhase({ kind: 'reading', file })
           },
         })
-        dispatch({ type: 'resume/uploaded', resume: result.resume, essentials: result.essentials })
+        dispatch({ type: 'resume/uploaded', resume: result.resume, essentials: result.essentials, details: result.details })
         setPhase({ kind: 'done', file })
         window.setTimeout(() => navigate('/onboarding/essentials'), prefersReducedMotion() ? 0 : 700)
       } catch (err) {
@@ -160,7 +160,7 @@ export function ResumePage() {
             Step 1 of 2
           </p>
           <h1 className={styles.title} data-split>
-            Let’s start with what you already have.
+            Start with what you have.
           </h1>
           <p className={styles.lede} data-reveal>
             Add a resume so Clera can prepare your profile. You’ll review every detail before anything is shared.

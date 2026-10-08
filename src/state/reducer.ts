@@ -3,9 +3,13 @@ import type {
   AIConnection,
   Application,
   Essentials,
+  ExtraDocument,
   Match,
   MatchStatus,
   Profile,
+  ProfileDetails,
+  ProfileLink,
+  ProfileNote,
   ResumeFile,
   Role,
 } from '../data/types'
@@ -27,9 +31,22 @@ export interface AppState {
 }
 
 export type Action =
-  | { type: 'resume/uploaded'; resume: ResumeFile; essentials: Essentials }
+  | { type: 'resume/uploaded'; resume: ResumeFile; essentials: Essentials; details?: ProfileDetails }
+  | { type: 'resume/replaced'; resume: ResumeFile; details: ProfileDetails }
   | { type: 'resume/removed' }
-  | { type: 'profile/imported'; source: 'mcp'; essentials: Essentials }
+  | { type: 'profile/imported'; source: 'mcp'; essentials: Essentials; details?: ProfileDetails }
+  | { type: 'details/aboutChanged'; headline: string; summary: string }
+  | { type: 'details/skillAdded'; name: string; at: string }
+  | { type: 'details/skillRemoved'; name: string }
+  | { type: 'details/noteAdded'; note: ProfileNote }
+  | { type: 'details/noteRemoved'; id: string }
+  | { type: 'details/noteRestored'; note: ProfileNote; index: number }
+  | { type: 'details/linkAdded'; link: ProfileLink }
+  | { type: 'details/linkRemoved'; id: string }
+  | { type: 'documents/added'; doc: ExtraDocument }
+  | { type: 'documents/updated'; id: string; patch: Partial<Pick<ExtraDocument, 'kind' | 'shared'>> }
+  | { type: 'documents/removed'; id: string }
+  | { type: 'documents/restored'; doc: ExtraDocument; index: number }
   | { type: 'profile/startManual'; source: 'manual' | 'chat' | 'mcp' }
   | { type: 'essentials/changed'; patch: Partial<Essentials> }
   | { type: 'essentials/saved'; at: string }
@@ -70,6 +87,34 @@ export function sampleState(now = Date.now()): AppState {
   return { ...initialState(now), profile, matches, applications, matchingStartedAt: profile.savedAt }
 }
 
+function withDetails(state: AppState, fn: (d: ProfileDetails) => ProfileDetails): AppState {
+  const details = fn(state.profile.details)
+  return details === state.profile.details ? state : { ...state, profile: { ...state.profile, details } }
+}
+
+/**
+ * Bring in freshly parsed details without clobbering what the candidate
+ * wrote or told Clera: their own edits and chat notes always survive.
+ */
+export function mergeDetails(current: ProfileDetails, incoming: ProfileDetails): ProfileDetails {
+  const keepAbout = current.aboutSource === 'you' && current.headline
+  const mine = <T extends { source: string }>(xs: T[]) => xs.filter((x) => x.source !== incoming.aboutSource)
+  const skills = [...mine(current.skills)]
+  for (const s of incoming.skills) if (!skills.some((x) => x.name.toLowerCase() === s.name.toLowerCase())) skills.push(s)
+  const links = [...mine(current.links)]
+  for (const l of incoming.links) if (!links.some((x) => x.url === l.url)) links.push(l)
+  return {
+    headline: keepAbout ? current.headline : incoming.headline,
+    summary: keepAbout ? current.summary : incoming.summary,
+    aboutSource: keepAbout ? 'you' : incoming.aboutSource,
+    experience: incoming.experience.length ? incoming.experience : current.experience,
+    education: incoming.education.length ? incoming.education : current.education,
+    skills,
+    notes: [...incoming.notes, ...current.notes.filter((n) => !incoming.notes.some((m) => m.id === n.id))],
+    links,
+  }
+}
+
 function updateApp(state: AppState, roleId: string, fn: (a: Application) => Application): AppState {
   let found = false
   const applications = state.applications.map((a) => {
@@ -95,8 +140,76 @@ export function reducer(state: AppState, action: Action): AppState {
           resume: action.resume,
           essentials: action.essentials,
           prefilled: { targetRole: true, location: true, workStyles: true, visa: true },
+          details: action.details ? mergeDetails(state.profile.details, action.details) : state.profile.details,
         },
       }
+
+    case 'resume/replaced':
+      return {
+        ...state,
+        profile: { ...state.profile, resume: action.resume, details: mergeDetails(state.profile.details, action.details) },
+      }
+
+    case 'details/aboutChanged':
+      return withDetails(state, (d) => ({ ...d, headline: action.headline, summary: action.summary, aboutSource: 'you' }))
+
+    case 'details/skillAdded': {
+      const name = action.name.trim()
+      if (!name) return state
+      return withDetails(state, (d) =>
+        d.skills.some((s) => s.name.toLowerCase() === name.toLowerCase())
+          ? d
+          : { ...d, skills: [...d.skills, { name, source: 'you', addedAt: action.at }] },
+      )
+    }
+
+    case 'details/skillRemoved':
+      return withDetails(state, (d) => ({ ...d, skills: d.skills.filter((s) => s.name !== action.name) }))
+
+    case 'details/noteAdded':
+      return withDetails(state, (d) => ({ ...d, notes: [action.note, ...d.notes] }))
+
+    case 'details/noteRemoved':
+      return withDetails(state, (d) => ({ ...d, notes: d.notes.filter((n) => n.id !== action.id) }))
+
+    case 'details/noteRestored':
+      return withDetails(state, (d) => {
+        if (d.notes.some((n) => n.id === action.note.id)) return d
+        const notes = [...d.notes]
+        notes.splice(Math.min(action.index, notes.length), 0, action.note)
+        return { ...d, notes }
+      })
+
+    case 'details/linkAdded':
+      return withDetails(state, (d) =>
+        d.links.some((l) => l.url === action.link.url) ? d : { ...d, links: [...d.links, action.link] },
+      )
+
+    case 'details/linkRemoved':
+      return withDetails(state, (d) => ({ ...d, links: d.links.filter((l) => l.id !== action.id) }))
+
+    case 'documents/added':
+      if (state.profile.documents.some((x) => x.id === action.doc.id)) return state
+      return { ...state, profile: { ...state.profile, documents: [...state.profile.documents, action.doc] } }
+
+    case 'documents/updated':
+      return {
+        ...state,
+        profile: {
+          ...state.profile,
+          documents: state.profile.documents.map((x) => (x.id === action.id ? { ...x, ...action.patch } : x)),
+        },
+      }
+
+    case 'documents/removed':
+      return { ...state, profile: { ...state.profile, documents: state.profile.documents.filter((x) => x.id !== action.id) } }
+
+    case 'documents/restored': {
+      if (state.profile.documents.some((x) => x.id === action.doc.id)) return state
+      const documents = [...state.profile.documents]
+      documents.splice(Math.min(action.index, documents.length), 0, action.doc)
+      return { ...state, profile: { ...state.profile, documents } }
+    }
 
     case 'profile/imported':
       return {
@@ -106,6 +219,7 @@ export function reducer(state: AppState, action: Action): AppState {
           source: action.source,
           essentials: action.essentials,
           prefilled: { targetRole: true, location: true, workStyles: true, visa: true },
+          details: action.details ? mergeDetails(state.profile.details, action.details) : state.profile.details,
         },
       }
 

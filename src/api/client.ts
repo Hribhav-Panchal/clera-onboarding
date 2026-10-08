@@ -1,5 +1,5 @@
-import { PARSED_ESSENTIALS, FIRST_MATCH_IDS } from '../data/seed'
-import type { AIConnection, AIProvider, Essentials, Match, ResumeFile } from '../data/types'
+import { PARSED_ESSENTIALS, FIRST_MATCH_IDS, parsedDetails } from '../data/seed'
+import type { AIConnection, AIProvider, DocumentKind, Essentials, ExtraDocument, Match, ProfileDetails, ResumeFile } from '../data/types'
 import { hasPdfSignature } from '../lib/validation'
 
 /*
@@ -79,7 +79,7 @@ export function errorMessage(err: unknown): string {
 export async function uploadResume(
   file: File,
   opts: { onProgress?: (pct: number) => void; signal?: AbortSignal } = {},
-): Promise<{ resume: ResumeFile; essentials: Essentials }> {
+): Promise<{ resume: ResumeFile; essentials: Essentials; details: ProfileDetails }> {
   const { onProgress, signal } = opts
   if (!(await hasPdfSignature(file))) {
     throw new ApiError('This file does not look like a valid PDF. Try exporting it again.', false)
@@ -95,9 +95,45 @@ export async function uploadResume(
     () => ({
       resume: { fileName: file.name, size: file.size, uploadedAt: new Date().toISOString() },
       essentials: { ...PARSED_ESSENTIALS, workStyles: [...PARSED_ESSENTIALS.workStyles] },
+      details: parsedDetails('resume'),
     }),
     signal,
   )
+}
+
+/* ------------------------------------------------------------ Documents */
+
+export async function uploadDocument(
+  file: File,
+  kind: DocumentKind,
+  opts: { onProgress?: (pct: number) => void; signal?: AbortSignal } = {},
+): Promise<ExtraDocument> {
+  const steps = 8
+  for (let i = 1; i <= steps; i++) {
+    await wait(latency(60), opts.signal)
+    opts.onProgress?.(Math.round((i / steps) * 100))
+  }
+  return call(
+    250,
+    () => ({
+      id: `doc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+      name: file.name,
+      size: file.size,
+      mime: file.type,
+      kind,
+      addedAt: new Date().toISOString(),
+      shared: false,
+    }),
+    opts.signal,
+  )
+}
+
+export function deleteDocument(_id: string) {
+  return call(250, () => ({ ok: true }))
+}
+
+export function saveProfileDetail() {
+  return call(300, () => ({ savedAt: new Date().toISOString() }))
 }
 
 /* ------------------------------------------------------------- Profile */

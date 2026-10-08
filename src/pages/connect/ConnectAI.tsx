@@ -7,7 +7,7 @@ import { AIMark } from '../../components/AIMark'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { useToast } from '../../components/Toast'
-import { PARSED_ESSENTIALS } from '../../data/seed'
+import { PARSED_ESSENTIALS, parsedDetails } from '../../data/seed'
 import type { AIConnection, AIProvider } from '../../data/types'
 import { copyText } from '../../lib/clipboard'
 import { relativeTime } from '../../lib/format'
@@ -94,6 +94,7 @@ function Choose({ mode }: { mode: 'settings' | 'onboarding' }) {
           type: 'profile/imported',
           source: 'mcp',
           essentials: { ...PARSED_ESSENTIALS, workStyles: [...PARSED_ESSENTIALS.workStyles] },
+          details: parsedDetails('chat'),
         })
         toast({ message: `Connected to ${p.name}. We pulled in your details — check them below.`, tone: 'success' })
         navigate('/onboarding/essentials')
