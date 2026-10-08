@@ -1,0 +1,83 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.label {
+  font: 500 14px/20px var(--font-sans);
+  color: var(--text-primary);
+}
+
+/* Input — 13px/14px padding, 8px radius, border-strong */
+.control {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.control:hover {
+  border-color: var(--text-secondary);
+}
+
+.control:focus-within {
+  border-color: var(--sage-600);
+  box-shadow: var(--focus-ring);
+}
+
+.control input {
+  flex: 1;
+  min-width: 0;
+  padding: 13px 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: 400 15px/24px var(--font-sans);
+  color: var(--text-primary);
+}
+
+.control input:focus-visible {
+  box-shadow: none;
+}
+
+.control input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.prefix {
+  margin-right: 4px;
+  font: 400 15px/24px var(--font-sans);
+  color: var(--text-tertiary);
+}
+
+.invalid {
+  border-color: var(--clay-600);
+}
+
+.invalid:focus-within {
+  border-color: var(--clay-600);
+  box-shadow: 0 0 0 3px rgb(168 86 56 / 0.2);
+}
+
+.hint {
+  font: 400 13px/18px var(--font-sans);
+  color: var(--text-tertiary);
+}
+
+.error {
+  font: 500 13px/18px var(--font-sans);
+  color: var(--clay-600);
+}

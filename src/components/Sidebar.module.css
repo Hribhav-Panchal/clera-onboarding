@@ -1,0 +1,86 @@
+/* Sidebar — 232px, 20px/14px padding, 2px gap between 38px items. */
+.sidebar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 100%;
+  padding: 20px 14px;
+  background: var(--surface);
+  isolation: isolate;
+}
+
+.brand {
+  padding: 0 0 24px 10px;
+}
+
+.indicator {
+  position: absolute;
+  top: 0;
+  left: 14px;
+  right: 14px;
+  z-index: -1;
+  border-radius: var(--radius-sm);
+  background: var(--sage-50);
+  visibility: hidden;
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  font: 500 14px/20px var(--font-sans);
+  color: var(--text-secondary);
+  transition:
+    color var(--dur-med) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.item:hover:not(.active) {
+  background: var(--sunken);
+  color: var(--text-primary);
+}
+
+.active {
+  color: var(--sage-700);
+}
+
+.icon {
+  flex-shrink: 0;
+  transition: transform 0.35s var(--ease-out);
+}
+
+/* Small, distinct icon gestures on hover. */
+.item:hover .icon-home {
+  transform: translateY(-1px);
+}
+.item:hover .icon-matches {
+  transform: rotate(18deg) scale(1.08);
+}
+.item:hover .icon-profile {
+  transform: scale(1.08);
+}
+.item:hover .icon-documents {
+  transform: rotate(-6deg);
+}
+.item:hover .icon-settings {
+  transform: rotate(60deg);
+}
+
+.badge {
+  margin-left: auto;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--sage-600);
+  color: var(--text-inverse);
+  font: 500 11px/18px var(--font-sans);
+  text-align: center;
+}
+
+.grow {
+  flex: 1;
+}

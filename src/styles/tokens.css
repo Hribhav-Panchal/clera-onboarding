@@ -1,0 +1,78 @@
+/*
+ * Clera design tokens — mirrored 1:1 from the Figma variables in
+ * "Clera · Redesign". Letter-spacing values in Figma are percentages of
+ * the font size; they are converted to em here.
+ */
+:root {
+  /* Surfaces */
+  --canvas: #faf9f5;
+  --surface: #ffffff;
+  --sunken: #f4f6f4;
+  --subtle: #f4f0e8;
+
+  /* Text */
+  --text-primary: #17221c;
+  --text-secondary: #526159;
+  --text-tertiary: #7e8a83;
+  --text-inverse: #ffffff;
+
+  /* Borders */
+  --border: #e3e6e1;
+  --border-strong: #77857d;
+
+  /* Brand — sage */
+  --sage-50: #eaf4ed;
+  --sage-200: #bfdccb;
+  --sage-600: #176b49;
+  --sage-700: #12573b;
+
+  /* Status */
+  --clay-100: #f4ddd3;
+  --clay-600: #a85638;
+  --amber-100: #f6e8cc;
+  --amber-50: #fbf3e6;
+  --amber-600: #9a6f1e;
+  --muted-100: #eae7de;
+  --muted-600: #7c776d;
+
+  /* Interaction (derived — not in Figma, used for hover/press states) */
+  --sage-650: #146141;
+  --sage-100: #d9ebdf;
+  --surface-hover: #f7f8f6;
+  --focus-ring: 0 0 0 3px rgb(23 107 73 / 0.28);
+  --shadow-card-hover: 0 1px 2px rgb(23 34 28 / 0.04), 0 8px 24px -12px rgb(23 34 28 / 0.18);
+  --shadow-popover: 0 2px 4px rgb(23 34 28 / 0.06), 0 16px 40px -12px rgb(23 34 28 / 0.28);
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+  --radius-pill: 999px;
+
+  /* Layout */
+  --sidebar-w: 232px;
+  --assistant-w: 352px;
+  --topbar-h: 68px;
+  --content-max: 792px;
+
+  /* Type */
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 140ms;
+  --dur-med: 220ms;
+}
+
+/* Text styles — one class per Figma text style */
+.t-display-40 { font: 600 40px/48px var(--font-sans); letter-spacing: -0.02em; }
+.t-h1-24      { font: 600 24px/32px var(--font-sans); letter-spacing: -0.015em; }
+.t-h2-18      { font: 600 18px/24px var(--font-sans); letter-spacing: -0.01em; }
+.t-h3-15      { font: 600 15px/20px var(--font-sans); letter-spacing: -0.005em; }
+.t-body-15    { font: 400 15px/24px var(--font-sans); }
+.t-body-14    { font: 400 14px/22px var(--font-sans); }
+.t-body-14m   { font: 500 14px/20px var(--font-sans); }
+.t-body-13    { font: 400 13px/18px var(--font-sans); }
+.t-label-12   { font: 500 12px/16px var(--font-sans); letter-spacing: 0.01em; }
+.t-caption-11 { font: 500 11px/14px var(--font-sans); letter-spacing: 0.04em; }

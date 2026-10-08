@@ -1,0 +1,12 @@
+.brand {
+  display: inline-block;
+  font: 600 24px/32px var(--font-sans);
+  letter-spacing: -0.015em;
+  color: var(--sage-700);
+  border-radius: 6px;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.brand:hover {
+  color: var(--sage-600);
+}

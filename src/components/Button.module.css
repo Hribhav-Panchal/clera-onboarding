@@ -1,0 +1,116 @@
+/* Button — Figma component "Button" (241:28101): Primary / Secondary / Ghost.
+   10px 18px padding, 8px radius, Body/14M label. */
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font: 500 14px/20px var(--font-sans);
+  white-space: nowrap;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transform-origin: center;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.icon {
+  display: inline-flex;
+}
+
+.label {
+  min-width: 0;
+}
+
+.block {
+  width: 100%;
+}
+
+.sm {
+  padding: 6px 12px;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+/* Primary — sage-600 fill. Primary has no border in Figma, so it is 40px
+   while Secondary is 42px; transparent border keeps them aligned in rows. */
+.primary {
+  background: var(--sage-600);
+  color: var(--text-inverse);
+  border-width: 0;
+  padding: 10px 18px;
+}
+
+.primary:hover:not(:disabled, [aria-disabled='true']) {
+  background: var(--sage-650);
+  box-shadow: 0 6px 16px -8px rgb(18 87 59 / 0.55);
+}
+
+.primary:active:not(:disabled) {
+  background: var(--sage-700);
+}
+
+.secondary {
+  background: var(--surface);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.secondary:hover:not(:disabled, [aria-disabled='true']) {
+  border-color: #c9cfc8;
+  background: var(--surface-hover);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.ghost:hover:not(:disabled, [aria-disabled='true']) {
+  background: rgb(23 34 28 / 0.05);
+  color: var(--text-primary);
+}
+
+.danger {
+  background: transparent;
+  color: var(--clay-600);
+}
+
+.danger:hover:not(:disabled, [aria-disabled='true']) {
+  background: var(--clay-100);
+}
+
+.button:disabled,
+.button[aria-disabled='true'] {
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.loading {
+  cursor: progress;
+}
+
+.loading .content {
+  opacity: 0;
+}
+
+.spinner {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}

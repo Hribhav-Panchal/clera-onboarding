@@ -1,0 +1,121 @@
+/* A2 · Confirm essentials — 600px column, 64px padding, 24px gap */
+.task {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 600px;
+  padding: 64px 0 96px;
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.eyebrow {
+  font: 500 12px/16px var(--font-sans);
+  letter-spacing: 0.01em;
+  color: var(--sage-700);
+}
+
+.title {
+  font: 600 40px/48px var(--font-sans);
+  letter-spacing: -0.02em;
+}
+
+.lede {
+  font: 400 15px/24px var(--font-sans);
+  color: var(--text-secondary);
+}
+
+/* "Looks right" — sage-200 border, 12px radius, 14px 12px 14px 20px */
+.looksRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px 14px 20px;
+  border: 1px solid var(--sage-200);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  transition: box-shadow var(--dur-med) var(--ease-out);
+}
+
+.looksRight:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.looksText {
+  flex: 1;
+  min-width: 0;
+}
+
+.looksTitle {
+  font: 600 15px/20px var(--font-sans);
+  letter-spacing: -0.005em;
+}
+
+.looksBody {
+  margin-top: 3px;
+  font: 400 13px/18px var(--font-sans);
+  color: var(--text-secondary);
+}
+
+.or,
+.privacy {
+  font: 400 13px/18px var(--font-sans);
+  color: var(--text-tertiary);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.grow {
+  flex: 1;
+}
+
+.saved {
+  display: inline-flex;
+  gap: 6px;
+  align-items: baseline;
+  font: 400 13px/18px var(--font-sans);
+  color: var(--text-tertiary);
+}
+
+.saveError {
+  color: var(--clay-600);
+}
+
+.saveError :global(.link) {
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .task {
+    padding: 32px 0 64px;
+  }
+
+  .title {
+    font-size: 30px;
+    line-height: 38px;
+  }
+
+  .looksRight {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+  }
+
+  .footer {
+    flex-wrap: wrap;
+  }
+
+  .saved {
+    order: -1;
+    width: 100%;
+  }
+}
