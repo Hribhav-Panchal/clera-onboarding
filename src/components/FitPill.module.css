@@ -1,0 +1,105 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  border-radius: var(--radius-pill);
+  font: 500 15px/20px var(--font-sans);
+  white-space: nowrap;
+}
+
+.md {
+  padding: 5px 10px;
+}
+
+.lg {
+  padding: 6px 12px;
+}
+
+.high {
+  background: var(--sage-600);
+  color: var(--text-inverse);
+}
+
+.mid {
+  background: var(--sage-50);
+  color: var(--sage-700);
+}
+
+.low {
+  background: var(--muted-100);
+  color: var(--muted-600);
+}
+
+.wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.trigger {
+  border-radius: var(--radius-pill);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.trigger:hover .pill {
+  box-shadow: 0 0 0 4px rgb(23 107 73 / 0.12);
+}
+
+.trigger .pill {
+  transition: box-shadow var(--dur-med) var(--ease-out);
+}
+
+/* Hover · why 86 — 300px card anchored under the pill's right edge */
+.popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  width: 300px;
+  max-width: calc(100vw - 32px);
+  padding: 15px 17px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-popover);
+  transform-origin: top right;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.popTitle {
+  font: 600 15px/20px var(--font-sans);
+  letter-spacing: -0.005em;
+  color: var(--text-primary);
+}
+
+.reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.reason {
+  display: flex;
+  gap: 8px;
+  font: 400 13px/18px var(--font-sans);
+  color: var(--text-secondary);
+}
+
+.reason svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.check {
+  color: var(--sage-600);
+}
+
+.minus {
+  color: var(--text-tertiary);
+}
+
+.improve {
+  display: inline-block;
+  margin-top: 10px;
+}

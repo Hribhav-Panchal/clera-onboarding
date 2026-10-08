@@ -1,0 +1,98 @@
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Step row — 14px 20px 16px, 24px dot, 14px gap */
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 20px 16px;
+}
+
+.divided .item + .item {
+  border-top: 1px solid var(--border);
+}
+
+.dot {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font: 500 11px/14px var(--font-sans);
+  letter-spacing: 0.04em;
+}
+
+.check {
+  display: grid;
+  place-items: center;
+}
+
+.done .dot {
+  background: var(--sage-50);
+  color: var(--sage-600);
+}
+
+.current .dot {
+  position: relative;
+  background: var(--sage-600);
+  color: var(--text-inverse);
+}
+
+.current.amber .dot {
+  background: var(--amber-100);
+  color: var(--amber-600);
+}
+
+.current .dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  opacity: 0;
+  animation: ping 2s var(--ease-out) infinite;
+}
+
+.current:not(.amber) .dot::after {
+  border-color: var(--sage-600);
+}
+
+@keyframes ping {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  80%,
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+.todo .dot {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  color: var(--text-tertiary);
+}
+
+.text {
+  min-width: 0;
+}
+
+.title {
+  font: 500 15px/20px var(--font-sans);
+  color: var(--text-primary);
+}
+
+.todo .title {
+  font-weight: 400;
+}
+
+.body {
+  margin-top: 3px;
+  font: 400 13px/18px var(--font-sans);
+  color: var(--text-secondary);
+}

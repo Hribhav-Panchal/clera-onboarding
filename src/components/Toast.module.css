@@ -1,0 +1,77 @@
+.region {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 100;
+  transform: translateX(-50%);
+  width: min(440px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--text-primary);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-popover);
+  pointer-events: auto;
+}
+
+.error {
+  background: var(--clay-600);
+}
+
+.success {
+  background: var(--sage-700);
+}
+
+.message {
+  flex: 1;
+  font: 400 14px/20px var(--font-sans);
+}
+
+.action {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font: 600 13px/18px var(--font-sans);
+  color: #b6e3c8;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.error .action {
+  color: #ffe6dc;
+}
+
+.action:hover {
+  background: rgb(255 255 255 / 0.1);
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: rgb(255 255 255 / 0.7);
+}
+
+.close:hover {
+  background: rgb(255 255 255 / 0.1);
+  color: #fff;
+}
+
+/* Clear the floating "Ask Clera" launcher when the assistant is not docked. */
+@media (max-width: 1279px) {
+  .region {
+    bottom: 84px;
+  }
+}

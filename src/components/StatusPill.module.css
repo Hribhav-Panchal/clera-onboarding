@@ -1,0 +1,58 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  border-radius: var(--radius-pill);
+  font: 500 12px/16px var(--font-sans);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dot {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+}
+
+.setup {
+  background: var(--muted-100);
+  color: var(--muted-600);
+}
+
+.looking {
+  background: var(--sage-50);
+  color: var(--sage-700);
+}
+
+.needs-you {
+  background: var(--clay-100);
+  color: var(--clay-600);
+}
+
+.waiting {
+  background: var(--amber-100);
+  color: var(--amber-600);
+}
+
+.booked {
+  background: var(--sage-600);
+  color: var(--text-inverse);
+}
+
+.closed {
+  background: var(--muted-100);
+  color: var(--muted-600);
+}

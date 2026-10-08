@@ -1,0 +1,32 @@
+.mark {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.sm {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+}
+
+.md {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+}
+
+.lg {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+}
+
+.text {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}

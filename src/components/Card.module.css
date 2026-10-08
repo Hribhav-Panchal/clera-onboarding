@@ -1,0 +1,55 @@
+.card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.hero {
+  border-color: var(--sage-200);
+}
+
+.subtle {
+  background: var(--subtle);
+  border-color: transparent;
+}
+
+.amber {
+  background: var(--amber-50);
+  border-color: transparent;
+}
+
+.muted {
+  background: var(--sunken);
+  border-color: transparent;
+}
+
+.r12 {
+  border-radius: var(--radius-lg);
+}
+
+.r14 {
+  border-radius: var(--radius-xl);
+}
+
+.p-none {
+  padding: 0;
+}
+
+.p-sm {
+  padding: 14px 20px;
+}
+
+.p-md {
+  padding: 17px 20px 18px;
+}
+
+.p-lg {
+  padding: 22px 24px;
+}
+
+@media (max-width: 640px) {
+  .p-md,
+  .p-lg {
+    padding: 16px;
+  }
+}

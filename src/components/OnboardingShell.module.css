@@ -1,0 +1,112 @@
+.page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--canvas);
+}
+
+/* Top bar — 68px, 32px left / 24px right padding, 24px gap */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: var(--topbar-h);
+  padding: 0 24px 0 32px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.stepper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.stepper ol {
+  display: flex;
+  gap: 28px;
+}
+
+.stepLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding-right: 4px;
+}
+
+a.stepLink:hover .stepLabel {
+  color: var(--text-primary);
+}
+
+.dot {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font: 500 11px/14px var(--font-sans);
+  letter-spacing: 0.04em;
+  transition:
+    background-color var(--dur-med) var(--ease-out),
+    color var(--dur-med) var(--ease-out);
+}
+
+.stepLabel {
+  font: 500 14px/20px var(--font-sans);
+  white-space: nowrap;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.current .dot,
+.done .dot {
+  background: var(--sage-600);
+  color: var(--text-inverse);
+}
+
+.current .stepLabel {
+  color: var(--text-primary);
+}
+
+.done .stepLabel,
+.todo .stepLabel {
+  color: var(--text-tertiary);
+}
+
+.todo .dot {
+  background: var(--sunken);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  color: var(--text-tertiary);
+}
+
+.main {
+  display: flex;
+  justify-content: center;
+  padding: 0 24px;
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    gap: 12px;
+    padding: 0 12px 0 16px;
+  }
+
+  .stepper ol {
+    gap: 14px;
+  }
+
+  .stepLabel {
+    display: none;
+  }
+
+  .current .stepLabel {
+    display: inline;
+  }
+
+  .main {
+    padding: 0 16px;
+  }
+}
