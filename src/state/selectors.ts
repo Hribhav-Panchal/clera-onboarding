@@ -1,4 +1,4 @@
-import type { Application, ApplicationStage, Match, Role } from '../data/types'
+import type { Application, ApplicationStage, Match, Question, Role } from '../data/types'
 import { dayLabel, daysSince, relativeTime, shortDate, clockTime } from '../lib/format'
 import type { AppState } from './reducer'
 
@@ -119,6 +119,16 @@ export function matchCounts(state: AppState): Record<MatchFilter, number> {
   const c = { new: 0, requested: 0, dismissed: 0 }
   for (const m of state.matches) if (state.roles[m.roleId]) c[m.status]++
   return c
+}
+
+/** The answer that would be sent for a question right now. */
+export function answerFor(q: Question, drafts: Record<string, string> | undefined): string {
+  return drafts?.[q.id] ?? (q.kind === 'choice' ? (q.prefill ?? '') : q.prefill)
+}
+
+/** Questions Clera can't answer from the profile and the candidate hasn't yet. */
+export function unanswered(role: Role, drafts: Record<string, string> | undefined): Question[] {
+  return role.questions.filter((q) => !answerFor(q, drafts).trim())
 }
 
 export function applicationFor(state: AppState, roleId: string): Application | null {

@@ -201,3 +201,180 @@
     flex: 1;
   }
 }
+
+/* ---- Whole card opens the role (stretched link); controls sit above it */
+.card {
+  cursor: pointer;
+}
+
+.cardLink {
+  color: inherit;
+  border-radius: 4px;
+}
+
+.cardLink::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: var(--radius-lg);
+}
+
+.cardLink:focus-visible {
+  box-shadow: none;
+}
+
+.cardLink:focus-visible::after {
+  box-shadow: var(--focus-ring);
+}
+
+.card:hover .cardLink {
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+
+.actions,
+.actions * {
+  position: relative;
+  z-index: 2;
+}
+
+.actions {
+  gap: 8px;
+  perspective: 600px;
+}
+
+/* X — round, quiet until hovered */
+.iconBtn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.iconBtn:hover:not(:disabled) {
+  border-color: var(--clay-100);
+  background: var(--clay-100);
+  color: var(--clay-600);
+}
+
+.iconBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Apply */
+.apply {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 96px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: var(--radius-sm);
+  background: var(--sage-600);
+  color: var(--text-inverse);
+  font: 500 14px/20px var(--font-sans);
+  white-space: nowrap;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  transition:
+    background-color var(--dur-med) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    color var(--dur-med) var(--ease-out);
+}
+
+.apply:hover:not(:disabled) {
+  background: var(--sage-650);
+  box-shadow: 0 6px 16px -8px rgb(18 87 59 / 0.55);
+}
+
+.apply:disabled {
+  cursor: default;
+}
+
+.apply[aria-busy='true'] {
+  cursor: progress;
+}
+
+/* Flipped: the role needs answers first */
+.applyNeeds {
+  background: var(--surface);
+  color: var(--sage-700);
+  box-shadow: inset 0 0 0 1.5px var(--sage-600);
+}
+
+.applyNeeds:hover:not(:disabled) {
+  background: var(--sage-50);
+  box-shadow: inset 0 0 0 1.5px var(--sage-600);
+}
+
+.applyNeeds svg {
+  transition: transform var(--dur-med) var(--ease-out);
+}
+
+.applyNeeds:hover svg {
+  transform: translateX(3px);
+}
+
+/* Applied ✓ */
+.applyDone,
+.applyDone:disabled {
+  background: var(--sage-50);
+  color: var(--sage-700);
+  box-shadow: inset 0 0 0 1px var(--sage-200);
+}
+
+.tick {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--sage-600);
+  color: var(--text-inverse);
+}
+
+.cardApplied {
+  border-color: var(--sage-200);
+}
+
+/* "Needs your answers" note */
+.needs {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--sage-50);
+  font: 400 13px/18px var(--font-sans);
+  color: var(--sage-700);
+}
+
+.needsDot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--sage-600);
+}
+
+@media (max-width: 520px) {
+  .actions .apply {
+    flex: 1;
+  }
+
+  .actions .iconBtn {
+    flex: 0 0 40px;
+  }
+}

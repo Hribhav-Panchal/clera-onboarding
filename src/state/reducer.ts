@@ -54,6 +54,7 @@ export type Action =
   | { type: 'matches/delivered'; matches: Match[] }
   | { type: 'match/setStatus'; roleId: string; status: MatchStatus }
   | { type: 'match/seen'; roleId: string }
+  | { type: 'match/needsAnswers'; roleId: string }
   | { type: 'draft/set'; roleId: string; questionId: string; value: string }
   | { type: 'draft/clear'; roleId: string; questionId?: string }
   | { type: 'application/sent'; roleId: string; answers: Record<string, string>; at: string }
@@ -254,6 +255,12 @@ export function reducer(state: AppState, action: Action): AppState {
 
     case 'match/setStatus':
       return { ...state, matches: setMatchStatus(state.matches, action.roleId, action.status) }
+
+    case 'match/needsAnswers':
+      return {
+        ...state,
+        matches: state.matches.map((m) => (m.roleId === action.roleId ? { ...m, needsAnswers: true } : m)),
+      }
 
     case 'match/seen':
       if (!state.matches.some((m) => m.roleId === action.roleId && m.unseen)) return state

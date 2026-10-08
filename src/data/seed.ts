@@ -6,6 +6,12 @@ import type { Application, DetailSource, Essentials, Match, Profile, ProfileDeta
  * production; see src/api/client.ts for the boundary.
  */
 
+const fitDrafts = (company: string) => [
+  `I want a role where I can shape a product from early research through delivery. My work simplifying complex workflows is directly relevant to what ${company} is building.`,
+  `I do my best work when I own a problem end to end — from talking to customers to shipping. I have spent the last few years turning complex workflows into simple tools, which is close to what ${company} is doing.`,
+  `Early-stage teams need a designer who can move between research, interaction design and front-end detail. That is how I have worked, and ${company}'s product is the kind of complex workflow I like to simplify.`,
+]
+
 const defaultQuestions = (company: string, city: string): Role['questions'] => [
   {
     id: 'q-work-style',
@@ -20,10 +26,37 @@ const defaultQuestions = (company: string, city: string): Role['questions'] => [
     id: 'q-fit',
     kind: 'text',
     prompt: 'What makes this role a good fit for you?',
-    prefill: `I want a role where I can shape a product from early research through delivery. My work simplifying complex workflows is directly relevant to what ${company} is building.`,
+    prefill: fitDrafts(company)[0],
     source: 'resume',
     sourceNote: 'Based on your resume. Read it as yours before sending.',
     maxLength: 600,
+    drafts: fitDrafts(company),
+  },
+]
+
+/** Questions Clera can't answer from a profile — the candidate has to. */
+const catalystExtras: Role['questions'] = [
+  {
+    id: 'q-onsite',
+    kind: 'choice',
+    prompt: 'Can you work from the Palo Alto office five days a week?',
+    options: ['Yes', 'No', 'Open to discussing'],
+    prefill: null,
+    source: null,
+    sourceNote: 'Your preferences say hybrid, so only you can answer this.',
+  },
+  {
+    id: 'q-zero-to-one',
+    kind: 'text',
+    prompt: 'Tell us about a product you took from zero to one.',
+    prefill: '',
+    source: null,
+    sourceNote: 'Not on your resume. Write it in your words, or let Clera draft a start.',
+    maxLength: 800,
+    drafts: [
+      'At Fieldnote I led the first version of the scheduling workflow from a blank page: twelve customer interviews, three rounds of prototypes, and a launch to 40 pilot teams in ten weeks. I owned the research, the interaction design and the component work that let engineering ship it quickly.',
+      'The clearest zero-to-one project I have led was Fieldnote’s scheduling tool. We started with a spreadsheet operations teams were outgrowing; I ran discovery, defined the first release with the founders, and shipped it to pilot customers in under three months.',
+    ],
   },
 ]
 
@@ -109,7 +142,7 @@ export function buildRoles(now = Date.now()): Record<string, Role> {
       clarify: 'Confirm whether the role is hybrid or full-time in the office.',
       description:
         'Catalyst is a seed-stage fintech infrastructure company. The founding designer will define the product, brand and design practice from scratch.',
-      questions: defaultQuestions('Catalyst', 'Palo Alto'),
+      questions: [...defaultQuestions('Catalyst', 'Palo Alto'), ...catalystExtras],
       sharedFields: 'your name, resume, these two answers and your portfolio link',
     },
     {

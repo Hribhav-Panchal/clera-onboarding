@@ -1,6 +1,7 @@
-import { useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { dismissMatch, errorMessage, restoreMatch } from '../api/client'
+import { ArrowRight, Check, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { dismissMatch, errorMessage, requestIntro, restoreMatch, withdrawRequest } from '../api/client'
 import { useAssistantContext } from '../assistant/context'
 import { Button } from '../components/Button'
 import { CompanyLogo } from '../components/CompanyLogo'
@@ -14,8 +15,10 @@ import type { Match, Role } from '../data/types'
 import { countWord, currency } from '../lib/format'
 import { gsap, prefersReducedMotion, useGSAP } from '../lib/motion'
 import { useHoverLift } from '../lib/useHoverLift'
+import { usePress } from '../lib/usePress'
+import { Spinner } from '../components/Spinner'
 import { useReveal } from '../lib/useReveal'
-import { applicationFor, matchCounts, matchesBy, pillForStage, type MatchFilter } from '../state/selectors'
+import { answerFor, applicationFor, matchCounts, matchesBy, pillForStage, unanswered, type MatchFilter } from '../state/selectors'
 import { useAppState, useDispatch } from '../state/store'
 import styles from './MatchesPage.module.css'
 
@@ -73,7 +76,7 @@ export function MatchesPage() {
           onChange={setFilter}
           tabs={[
             { key: 'new', label: 'New', count: counts.new },
-            { key: 'requested', label: 'Requested', count: counts.requested },
+            { key: 'requested', label: 'Applied', count: counts.requested },
             { key: 'dismissed', label: 'Dismissed', count: counts.dismissed },
           ]}
         />
@@ -111,8 +114,8 @@ function EmptyState({ filter }: { filter: MatchFilter }) {
       cta: { label: 'Edit preferences', to: '/profile' },
     },
     requested: {
-      title: 'No requests yet',
-      body: 'When you ask a company for an introduction, it moves here.',
+      title: 'No applications yet',
+      body: 'When you apply to a role, it moves here so you can follow it.',
       cta: null,
     },
     dismissed: {
@@ -142,8 +145,17 @@ function MatchCard({ match, role }: { match: Match; role: Role }) {
   const ref = useRef<HTMLLIElement>(null)
   const card = useRef<HTMLDivElement>(null)
   const [busy, setBusy] = useState(false)
+  const [applyState, setApplyState] = useState<'idle' | 'applying' | 'applied'>('idle')
   useHoverLift(card, { lift: 1 })
   const app = applicationFor(state, role.id)
+  const missing = unanswered(role, state.drafts[role.id])
+  const needsAnswers = Boolean(match.needsAnswers) && missing.length > 0
+  const label = `${role.title} at ${role.company}`
+  const detailsHref = `/roles/${role.id}`
+
+  // If the card unmounts mid-animation (navigation), still record the application.
+  const pendingSend = useRef<null | (() => void)>(null)
+  useEffect(() => () => pendingSend.current?.(), [])
 
   const collapse = (after: () => void) => {
     const el = ref.current
@@ -191,6 +203,48 @@ function MatchCard({ match, role }: { match: Match; role: Role }) {
     }
   }
 
+  const apply = async () => {
+    if (applyState !== 'idle') return
+    // Some roles ask things Clera can't answer from the profile: flip to the form.
+    if (missing.length > 0) {
+      dispatch({ type: 'match/needsAnswers', roleId: role.id })
+      return
+    }
+    setApplyState('applying')
+    try {
+      const answers = Object.fromEntries(role.questions.map((q) => [q.id, answerFor(q, state.drafts[role.id]).trim()]))
+      const { sentAt } = await requestIntro(role.id, answers)
+      const commit = () => {
+        pendingSend.current = null
+        dispatch({ type: 'application/sent', roleId: role.id, answers, at: sentAt })
+      }
+      pendingSend.current = commit
+      setApplyState('applied')
+      // Hold the tick for a beat, then the card leaves the stack.
+      window.setTimeout(
+        () =>
+          collapse(() => {
+            commit()
+            toast({
+              message: `Applied to ${role.company}.`,
+              tone: 'success',
+              action: {
+                label: 'Undo',
+                onClick: () => {
+                  dispatch({ type: 'application/withdrawn', roleId: role.id })
+                  void withdrawRequest(role.id).catch(() => undefined)
+                },
+              },
+            })
+          }),
+        prefersReducedMotion() ? 0 : 750,
+      )
+    } catch (err) {
+      setApplyState('idle')
+      toast({ message: errorMessage(err), tone: 'error', action: { label: 'Retry', onClick: () => void apply() } })
+    }
+  }
+
   // Listed facts first, then what the listing leaves out.
   const ordered = [
     role.company,
@@ -203,12 +257,17 @@ function MatchCard({ match, role }: { match: Match; role: Role }) {
 
   return (
     <li ref={ref} data-card className={styles.item}>
-      <div ref={card} className={styles.card}>
+      <div ref={card} className={`${styles.card} ${applyState === 'applied' ? styles.cardApplied : ''}`}>
         <div className={styles.top}>
           <CompanyLogo initials={role.initials} tone={role.tone} size={36} />
           <div className={styles.text}>
             <div className={styles.titleRow}>
-              <h2 className={styles.title}>{role.title}</h2>
+              <h2 className={styles.title}>
+                {/* Stretched link: the whole card opens the role. */}
+                <Link to={detailsHref} className={styles.cardLink}>
+                  {role.title}
+                </Link>
+              </h2>
               {match.status === 'new' && match.unseen ? <Tag>New</Tag> : null}
             </div>
             <p className={styles.meta}>{ordered.join(' · ')}</p>
@@ -217,37 +276,37 @@ function MatchCard({ match, role }: { match: Match; role: Role }) {
           <div className={styles.actions}>
             {match.status === 'new' ? (
               <>
-                <Button variant="ghost" onClick={() => void dismiss()} loading={busy} aria-label={`Not for me: ${role.title} at ${role.company}`}>
-                  Not for me
-                </Button>
-                <Button variant="secondary" to={`/roles/${role.id}`} aria-label={`Details: ${role.title} at ${role.company}`}>
-                  Details
-                </Button>
-                <Button onClick={() => navigate(`/roles/${role.id}#ask`)} aria-label={`Request intro: ${role.title} at ${role.company}`}>
-                  Request intro
-                </Button>
+                <IconButton label={`Not for me: ${label}`} onClick={() => void dismiss()} disabled={busy || applyState !== 'idle'}>
+                  <X size={18} strokeWidth={2} />
+                </IconButton>
+                <ApplyButton
+                  state={applyState}
+                  needsAnswers={needsAnswers}
+                  count={missing.length}
+                  label={label}
+                  onApply={() => void apply()}
+                  onAnswer={() => navigate(`${detailsHref}#ask`)}
+                />
               </>
             ) : match.status === 'requested' ? (
-              <>
-                {app ? <StatusPill state={pillForStage(app.stage)} /> : null}
-                <Button variant="secondary" to={`/roles/${role.id}`}>
-                  View
-                </Button>
-              </>
+              app ? <StatusPill state={pillForStage(app.stage)} /> : null
             ) : (
-              <>
-                <Button variant="secondary" to={`/roles/${role.id}`}>
-                  Details
-                </Button>
-                <Button variant="secondary" onClick={() => void restore()} loading={busy}>
-                  Restore
-                </Button>
-              </>
+              <Button variant="secondary" onClick={() => void restore()} loading={busy}>
+                Restore
+              </Button>
             )}
           </div>
         </div>
         <p className={styles.why}>{role.why}</p>
-        {role.conflict && match.status === 'new' ? (
+        {needsAnswers ? (
+          <div className={styles.needs} role="status">
+            <span className={styles.needsDot} aria-hidden />
+            <p>
+              {role.company} asks {missing.length === 1 ? 'one question' : `${countWord(missing.length).toLowerCase()} questions`} your
+              profile doesn’t answer yet. Clera can help you draft {missing.length === 1 ? 'it' : 'them'}.
+            </p>
+          </div>
+        ) : role.conflict && match.status === 'new' ? (
           <div className={styles.clarify}>
             <span className={styles.clarifyDot} aria-hidden />
             <p>{role.conflict}</p>
@@ -255,5 +314,102 @@ function MatchCard({ match, role }: { match: Match; role: Role }) {
         ) : null}
       </div>
     </li>
+  )
+}
+
+function IconButton({
+  label,
+  onClick,
+  disabled,
+  children,
+}: {
+  label: string
+  onClick: () => void
+  disabled?: boolean
+  children: React.ReactNode
+}) {
+  const ref = useRef<HTMLButtonElement>(null)
+  usePress(ref, { scale: 0.9, disabled })
+  return (
+    <button ref={ref} type="button" className={styles.iconBtn} aria-label={label} title="Not for me" onClick={onClick} disabled={disabled}>
+      {children}
+    </button>
+  )
+}
+
+/**
+ * Apply → (spinner) → ✓ Applied, or — when the role asks things Clera
+ * can't answer — flips over to "Answer N questions".
+ */
+function ApplyButton({
+  state,
+  needsAnswers,
+  count,
+  label,
+  onApply,
+  onAnswer,
+}: {
+  state: 'idle' | 'applying' | 'applied'
+  needsAnswers: boolean
+  count: number
+  label: string
+  onApply: () => void
+  onAnswer: () => void
+}) {
+  const ref = useRef<HTMLButtonElement>(null)
+  const face = useRef<HTMLSpanElement>(null)
+  const wasNeeds = useRef(needsAnswers)
+  const wasApplied = useRef(false)
+  usePress(ref, { disabled: state !== 'idle' })
+
+  // Flip on the X axis when the button changes job.
+  useEffect(() => {
+    const el = ref.current
+    if (!el || prefersReducedMotion()) {
+      wasNeeds.current = needsAnswers
+      return
+    }
+    if (needsAnswers && !wasNeeds.current) {
+      gsap.fromTo(el, { rotateX: -90 }, { rotateX: 0, duration: 0.5, ease: 'back.out(1.8)' })
+    }
+    wasNeeds.current = needsAnswers
+  }, [needsAnswers])
+
+  useEffect(() => {
+    if (state === 'applied' && !wasApplied.current && face.current && !prefersReducedMotion()) {
+      gsap.fromTo(face.current, { scale: 0.4, rotate: -30 }, { scale: 1, rotate: 0, duration: 0.45, ease: 'back.out(2.6)' })
+    }
+    wasApplied.current = state === 'applied'
+  }, [state])
+
+  const words = count === 1 ? 'Answer 1 question' : `Answer ${count} questions`
+  return (
+    <button
+      ref={ref}
+      type="button"
+      className={`${styles.apply} ${needsAnswers ? styles.applyNeeds : ''} ${state === 'applied' ? styles.applyDone : ''}`}
+      aria-label={needsAnswers ? `${words}: ${label}` : state === 'applied' ? `Applied: ${label}` : `Apply: ${label}`}
+      aria-busy={state === 'applying' || undefined}
+      disabled={state !== 'idle'}
+      onClick={needsAnswers ? onAnswer : onApply}
+    >
+      {state === 'applying' ? (
+        <Spinner size={16} />
+      ) : state === 'applied' ? (
+        <>
+          <span ref={face} className={styles.tick} aria-hidden>
+            <Check size={14} strokeWidth={3} />
+          </span>
+          Applied
+        </>
+      ) : needsAnswers ? (
+        <>
+          {words}
+          <ArrowRight size={15} aria-hidden />
+        </>
+      ) : (
+        'Apply'
+      )}
+    </button>
   )
 }
