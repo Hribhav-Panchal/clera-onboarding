@@ -114,18 +114,22 @@ export type Question =
       kind: 'choice'
       prompt: string
       options: string[]
+      /** null when Clera can't answer it from the profile — the candidate must. */
       prefill: string | null
-      source: 'preferences'
+      source: 'preferences' | null
       sourceNote: string
     }
   | {
       id: string
       kind: 'text'
       prompt: string
+      /** '' when Clera can't answer it from the profile — the candidate must. */
       prefill: string
-      source: 'resume'
+      source: 'resume' | null
       sourceNote: string
       maxLength: number
+      /** Answers "Help me with AI" can draft, in order. */
+      drafts: string[]
     }
 
 export interface Role {
@@ -163,6 +167,8 @@ export interface Match {
   receivedAt: string
   /** True until the candidate opens the role for the first time. */
   unseen: boolean
+  /** Set once Apply has shown that this role needs answers Clera doesn't have. */
+  needsAnswers?: boolean
 }
 
 export type ApplicationStage = 'waiting' | 'invited' | 'booked' | 'closed'

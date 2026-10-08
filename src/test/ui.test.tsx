@@ -78,10 +78,10 @@ describe('R1 → R2 · Ask for an introduction', () => {
     const answer = screen.getByLabelText(/What makes this role a good fit/)
     await userEvent.clear(answer)
     await userEvent.type(answer, 'Too short')
-    await userEvent.click(screen.getByRole('button', { name: 'Send introduction' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Apply' }))
     expect(await screen.findByText(/at least a sentence/)).toBeInTheDocument()
     await userEvent.type(answer, ' — I have shipped research-led products end to end.')
-    await userEvent.click(screen.getByRole('button', { name: 'Send introduction' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Apply' }))
     expect(await screen.findByText('Your introduction is on its way', {}, { timeout: 4000 })).toBeInTheDocument()
   })
 
@@ -103,5 +103,46 @@ describe('Ask Clera', () => {
     expect(screen.getByText('compare my matches')).toBeInTheDocument()
     await act(async () => {})
     expect(await screen.findByText(/Ranked by fit/, {}, { timeout: 4000 })).toBeInTheDocument()
+  })
+})
+
+describe('B1 · Apply from the card', () => {
+  it('applies straight away when the profile answers everything, then the card leaves', async () => {
+    renderAt('/matches', <MatchesPage />, sampleState())
+    const list = screen.getByRole('tabpanel')
+    await userEvent.click(screen.getByRole('button', { name: 'Apply: Founding Product Designer at Colare' }))
+    expect(await screen.findByRole('button', { name: /^Applied: / }, { timeout: 4000 })).toBeDisabled()
+    await waitFor(() => expect(within(list).getAllByRole('heading', { level: 2 })).toHaveLength(2), { timeout: 4000 })
+    expect(screen.getByRole('tab', { name: /Applied/ })).toHaveTextContent('5')
+    expect(await screen.findByRole('button', { name: 'Undo' })).toBeInTheDocument()
+  })
+
+  it('flips to questions when the role needs answers Clera does not have', async () => {
+    renderAt('/matches', <MatchesPage />, sampleState())
+    await userEvent.click(screen.getByRole('button', { name: 'Apply: Founding Designer at Catalyst' }))
+    expect(screen.getByRole('button', { name: /^Answer 2 questions: Founding Designer at Catalyst/ })).toBeEnabled()
+    expect(screen.getByText(/asks two questions your profile doesn’t answer yet/)).toBeInTheDocument()
+  })
+
+  it('opens the role when the card itself is clicked', () => {
+    renderAt('/matches', <MatchesPage />, sampleState())
+    expect(screen.getByRole('link', { name: 'Founding Product Designer' })).toHaveAttribute(
+      'href',
+      '/roles/colare-founding-product-designer',
+    )
+    expect(screen.queryByRole('button', { name: /Details/ })).not.toBeInTheDocument()
+  })
+})
+
+describe('R1 · questions that need you', () => {
+  it('drafts an empty answer with Help me with AI and blocks applying until all are answered', async () => {
+    renderAt('/roles/catalyst-founding-designer', <RolePage />, sampleState(), '/roles/:roleId')
+    expect(screen.getAllByText('Needs your answer').length).toBe(2)
+    await userEvent.click(screen.getByRole('button', { name: 'Apply' }))
+    expect(await screen.findByText(/Answer this, or use Help me with AI/)).toBeInTheDocument()
+    const helpers = screen.getAllByRole('button', { name: 'Help me with AI' })
+    expect(helpers).toHaveLength(2)
+    await userEvent.click(helpers[1])
+    expect((screen.getByLabelText(/zero to one/) as HTMLTextAreaElement).value).toMatch(/Fieldnote/)
   })
 })

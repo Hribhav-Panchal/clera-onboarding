@@ -85,6 +85,17 @@
   color: var(--text-primary);
 }
 
+/* Tertiary — a sage text action (e.g. "Help me with AI") */
+.tertiary {
+  background: transparent;
+  color: var(--sage-700);
+}
+
+.tertiary:hover:not(:disabled, [aria-disabled='true']) {
+  background: var(--sage-50);
+  color: var(--sage-600);
+}
+
 .danger {
   background: transparent;
   color: var(--clay-600);

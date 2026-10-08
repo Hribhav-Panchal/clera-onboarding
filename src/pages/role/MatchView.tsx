@@ -1,3 +1,4 @@
+import { Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { errorMessage, requestIntro, restoreMatch } from '../../api/client'
@@ -11,17 +12,12 @@ import { StageTracker } from '../../components/StageTracker'
 import { Tag } from '../../components/Tag'
 import { useToast } from '../../components/Toast'
 import type { Question, Role } from '../../data/types'
-import { relativeTime } from '../../lib/format'
+import { countWord, relativeTime } from '../../lib/format'
 import { gsap, prefersReducedMotion } from '../../lib/motion'
 import { useAppState, useDispatch } from '../../state/store'
 import { BackLink } from './RolePage'
 import styles from './role.module.css'
 
-const REWRITES = (company: string) => [
-  `I want a role where I can shape a product from early research through delivery. My work simplifying complex workflows is directly relevant to what ${company} is building.`,
-  `I do my best work when I own a problem end to end — from talking to customers to shipping. I have spent the last few years turning complex workflows into simple tools, which is close to what ${company} is doing.`,
-  `Early-stage teams need a designer who can move between research, interaction design and front-end detail. That is how I have worked, and ${company}'s product is the kind of complex workflow I like to simplify.`,
-]
 
 export function MatchView({ role }: { role: Role }) {
   const state = useAppState()
@@ -35,20 +31,31 @@ export function MatchView({ role }: { role: Role }) {
   const [showFull, setShowFull] = useState(false)
   const ask = useRef<HTMLElement>(null)
 
+  const missingCount = role.questions.filter((q) => q.source === null).length
   useAssistantContext(
     `role-match:${role.id}`,
-    'I drafted your fit answer from your resume. Read it as yours; the hybrid question is pre-answered from your preferences.',
-    ['Make the answer shorter', 'Mention my design systems work', `Explain the ${role.fit} percent`],
+    missingCount
+      ? `${role.company} asks ${missingCount === 1 ? 'one thing' : `${countWord(missingCount).toLowerCase()} things`} your profile doesn’t cover. Use Help me with AI on each, or tell me here and I will draft it with you.`
+      : 'I drafted your fit answer from your resume. Read it as yours; the hybrid question is pre-answered from your preferences.',
+    missingCount
+      ? ['Help me answer the zero-to-one question', `Explain the ${role.fit} percent`, 'Is the office expectation a dealbreaker?']
+      : ['Make the answer shorter', 'Mention my design systems work', `Explain the ${role.fit} percent`],
   )
 
-  // "Request intro" on a match card deep-links here.
+  // Apply on a match card deep-links here — land on the first question that needs you.
   useEffect(() => {
     if (location.hash !== '#ask' || !ask.current) return
     const t = window.setTimeout(() => {
-      ask.current?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' })
-      ask.current?.querySelector<HTMLElement>('[role="radio"][tabindex="0"], textarea')?.focus({ preventScroll: true })
+      const first = role.questions.find((q) => !(drafts[q.id] ?? (q.kind === 'choice' ? q.prefill ?? '' : q.prefill)).trim())
+      const target = (first && ask.current?.querySelector<HTMLElement>(`[data-q="${first.id}"]`)) || ask.current
+      target?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: first ? 'center' : 'start' })
+      target
+        ?.querySelector<HTMLElement>('textarea, [role="radio"][tabindex="0"]')
+        ?.focus({ preventScroll: true })
     }, 350)
     return () => window.clearTimeout(t)
+    // Only on arrival; later edits should not move focus.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.hash])
 
   const answerFor = (q: Question) => drafts[q.id] ?? (q.kind === 'choice' ? q.prefill ?? '' : q.prefill)
@@ -57,13 +64,16 @@ export function MatchView({ role }: { role: Role }) {
     if (errors[q.id]) setErrors((e) => ({ ...e, [q.id]: '' }))
   }
 
+  const needsYou = role.questions.filter((q) => q.source === null).length
+
   const validate = () => {
     const out: Record<string, string> = {}
     for (const q of role.questions) {
       const a = answerFor(q).trim()
       if (q.kind === 'choice' && !a) out[q.id] = 'Choose an answer.'
       if (q.kind === 'text') {
-        if (a.length < 20) out[q.id] = 'Write at least a sentence so the team has something to go on.'
+        if (!a) out[q.id] = 'Answer this, or use Help me with AI for a first draft.'
+        else if (a.length < 20) out[q.id] = 'Write at least a sentence so the team has something to go on.'
         else if (a.length > q.maxLength) out[q.id] = `Keep this under ${q.maxLength} characters.`
       }
     }
@@ -83,7 +93,7 @@ export function MatchView({ role }: { role: Role }) {
       const answers = Object.fromEntries(role.questions.map((q) => [q.id, answerFor(q).trim()]))
       const { sentAt } = await requestIntro(role.id, answers)
       dispatch({ type: 'application/sent', roleId: role.id, answers, at: sentAt })
-      toast({ message: `Introduction sent to ${role.company}.`, tone: 'success' })
+      toast({ message: `Applied to ${role.company}.`, tone: 'success' })
     } catch (err) {
       toast({ message: errorMessage(err), tone: 'error', action: { label: 'Retry', onClick: () => void send() } })
     } finally {
@@ -176,11 +186,12 @@ export function MatchView({ role }: { role: Role }) {
       <section ref={ask} id="ask" className={styles.askSection} aria-labelledby="ask-title">
         <div className={styles.askIntro} data-reveal>
           <h2 id="ask-title" className={styles.sectionTitle}>
-            Ask for an introduction
+            Apply to {role.company}
           </h2>
           <p className={styles.sectionBody}>
-            {role.company} asks {role.questions.length === 2 ? 'two' : role.questions.length} questions. We filled them in
-            from what you already told us. Edit anything, then send.
+            {needsYou === 0
+              ? `${role.company} asks ${countWord(role.questions.length).toLowerCase()} questions. We filled them in from what you already told us. Edit anything, then apply.`
+              : `${role.company} asks ${countWord(role.questions.length).toLowerCase()} questions. Clera answered ${countWord(role.questions.length - needsYou).toLowerCase()} from your profile; ${countWord(needsYou).toLowerCase()} ${needsYou === 1 ? 'needs' : 'need'} you.`}
           </p>
         </div>
 
@@ -196,7 +207,13 @@ export function MatchView({ role }: { role: Role }) {
                 error={errors[q.id] || undefined}
                 footer={
                   <p className={styles.tagLine}>
-                    <Tag size="sm">From your preferences</Tag>
+                    {q.source ? (
+                      <Tag size="sm">From your preferences</Tag>
+                    ) : (
+                      <Tag size="sm" tone="amber">
+                        Needs your answer
+                      </Tag>
+                    )}
                     <span>{q.sourceNote}</span>
                   </p>
                 }
@@ -208,7 +225,7 @@ export function MatchView({ role }: { role: Role }) {
                 value={answerFor(q)}
                 error={errors[q.id]}
                 onChange={(v) => setAnswer(q, v)}
-                rewrites={REWRITES(role.company)}
+                drafts={q.drafts}
               />
             )}
           </Card>
@@ -217,12 +234,14 @@ export function MatchView({ role }: { role: Role }) {
         <div className={styles.review} data-reveal>
           <div className={styles.reviewText}>
             <p className={styles.reviewTitle}>
-              {role.company} receives {role.sharedFields}.
+              {role.company} receives your name, resume,{' '}
+              {role.questions.length === 1 ? 'this answer' : `these ${countWord(role.questions.length).toLowerCase()} answers`} and your
+              portfolio link.
             </p>
             <p className={styles.reviewBody}>Only this company. Nothing else about you is shared. Change visibility in Profile.</p>
           </div>
-          <Button onClick={() => void send()} loading={sending} loadingLabel="Sending introduction">
-            Send introduction
+          <Button onClick={() => void send()} loading={sending} loadingLabel="Applying">
+            Apply
           </Button>
         </div>
       </section>
@@ -236,19 +255,19 @@ function TextAnswer({
   value,
   error,
   onChange,
-  rewrites,
+  drafts,
 }: {
   index: number
   q: Extract<Question, { kind: 'text' }>
   value: string
   error?: string
   onChange: (v: string) => void
-  rewrites: string[]
+  drafts: string[]
 }) {
   const id = `answer-${q.id}`
   const area = useRef<HTMLTextAreaElement>(null)
   const typing = useRef<gsap.core.Tween | null>(null)
-  const [isDraft, setIsDraft] = useState(rewrites.includes(value))
+  const [isDraft, setIsDraft] = useState(drafts.includes(value))
   const [writing, setWriting] = useState(false)
 
   useEffect(() => () => void typing.current?.kill(), [])
@@ -261,9 +280,10 @@ function TextAnswer({
     el.style.height = `${el.scrollHeight}px`
   }, [value])
 
-  const rewrite = () => {
-    const i = rewrites.indexOf(value)
-    const next = rewrites[(i + 1) % rewrites.length]
+  const helpWithAI = () => {
+    if (drafts.length === 0) return
+    const i = drafts.indexOf(value)
+    const next = drafts[(i + 1) % drafts.length]
     setIsDraft(true)
     if (prefersReducedMotion()) return onChange(next)
     // Type the new draft in, so the change is visible and readable.
@@ -313,6 +333,13 @@ function TextAnswer({
             <Tag size="sm" tone="amber">
               Draft by Clera
             </Tag>
+            <span className={styles.answerNote}>Read it as yours before applying.</span>
+          </>
+        ) : !value.trim() ? (
+          <>
+            <Tag size="sm" tone="amber">
+              Needs your answer
+            </Tag>
             <span className={styles.answerNote}>{q.sourceNote}</span>
           </>
         ) : (
@@ -321,8 +348,14 @@ function TextAnswer({
           </span>
         )}
         <span className={styles.grow} />
-        <Button variant="ghost" onClick={rewrite} disabled={writing}>
-          Rewrite
+        <Button
+          variant="tertiary"
+          size="sm"
+          onClick={helpWithAI}
+          disabled={writing || drafts.length === 0}
+          leading={<Sparkles size={14} aria-hidden />}
+        >
+          {writing ? 'Writing…' : 'Help me with AI'}
         </Button>
       </div>
     </div>

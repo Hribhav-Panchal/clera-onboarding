@@ -4,7 +4,7 @@ import { usePress } from '../lib/usePress'
 import { Spinner } from './Spinner'
 import styles from './Button.module.css'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'tertiary' | 'danger'
 
 type Common = {
   variant?: ButtonVariant
